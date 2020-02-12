@@ -1,16 +1,16 @@
 window.ToDoList = {
 
-    API_BASE_URL:"http://localhost:8081/tasks",
-    
-    getTasks:function () {
-$.ajax ({
-    url:ToDoList.API_BASE_URL,
-           method: "GET"
+    API_BASE_URL: "http://localhost:8081/tasks",
+
+    getTasks: function () {
+        $.ajax({
+            url: ToDoList.API_BASE_URL,
+            method: "GET"
 
         }).done(function (response) {
             console.log(response);
 
-    ToDoList.displayTasks(JSON.parse(response));
+            ToDoList.displayTasks(JSON.parse(response));
         })
 
     },
@@ -20,23 +20,38 @@ $.ajax ({
         let deadlineValue = $("#deadline-field").val();
 
         let requestBody = {
-            description:descriptionValue,
-            dealine:deadlineValue
-        } ;
+            description: descriptionValue,
+            deadLine: deadlineValue
+        };
 
         $.ajax({
             url: ToDoList.API_BASE_URL,
             method: "POST",
             // also known as mime type
             contentType: "application/json",
-            data: Json.stringify(requestBody)
+            data: JSON.stringify(requestBody)
         }).done(function () {
             ToDoList.getTasks();
 
         });
     },
 
-    getTaskRow:function (task) {
+    updateTask: function (id, done) {
+        let requestBody = {
+            done:done
+        };
+        $.ajax({
+            url: ToDoList.API_BASE_URL + "?id=" + id,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(requestBody)
+        }).done(function () {
+            ToDoList.getTasks();
+
+        });
+    },
+
+    getTaskRow: function (task) {
         // spread operator(...)
         let formattedDeadline = new Date(...task.deadline).toLocaleDateString("ro");
 
@@ -75,7 +90,18 @@ $.ajax ({
 
             ToDoList.createTask();
 
-        })
+        });
+// delegate is necessary here because the elements.mark-done
+        //is not present in the page from the beginning,but injected later on
+        $("#tasks-table").delegate(".mark-done", "change", function (event) {
+            event.preventDefault();
+
+            let taskId = $(this).data("id");
+            let checked = $(this).is("checked");
+
+
+            ToDoList.updateTask(taskId, checked);
+        });
 
     }
 
